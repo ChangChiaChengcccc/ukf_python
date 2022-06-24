@@ -199,30 +199,30 @@ def ukf():
 if __name__ == "__main__":
     try:
         rospy.init_node('UKF')
-        state_pub = rospy.Publisher("/ukf_estimated_state", Float64MultiArray, queue_size=10)
-	acc_dyn_pub = rospy.Publisher("/ukf_acc_dyn", Float64MultiArray, queue_size=10)
-        debug_pub = rospy.Publisher("/ukf_debug", Float64MultiArray, queue_size=10)
+        state_pub = rospy.Publisher("/offline_ukf_estimated_state", Float64MultiArray, queue_size=10)
+        acc_dyn_pub = rospy.Publisher("/offline_ukf_acc_dyn", Float64MultiArray, queue_size=10)
+        debug_pub = rospy.Publisher("/offline_ukf_debug", Float64MultiArray, queue_size=10)
         rospy.Subscriber("/pos_enu", Point, pos_enu_cb, queue_size=10)
         rospy.Subscriber("/angular_vel", Point, gyro_cb, queue_size=10)
         rospy.Subscriber("/f1_cmd", Float32MultiArray, f1_cmd_cb, queue_size=10)
         rospy.Subscriber("/f2_cmd", Float32MultiArray, f2_cmd_cb, queue_size=10)
         rospy.Subscriber("/f3_cmd", Float32MultiArray, f3_cmd_cb, queue_size=10)
         rospy.Subscriber("/f4_cmd", Float32MultiArray, f4_cmd_cb, queue_size=10)
-	rospy.Subscriber("/RotMat_ned", Float32MultiArray, RotMat_ned_cb, queue_size=10)
+        rospy.Subscriber("/RotMat_ned", Float32MultiArray, RotMat_ned_cb, queue_size=10)
 
         # pass all the parameters into the UKF!
         # number of state variables, process noise, initial state, initial coariance, three tuning paramters, and the iterate function
         #def __init__(self, num_states, process_noise, initial_state, initial_covar, alpha, k, beta, iterate_function, measurement_model):
         ukf_module = UKF(state_dim, q, initial_state, 0.001*np.eye(state_dim), 0.001, 0.0, 2.0, iterate_x, measurement_model)
         rate = rospy.Rate(40)
-	print("start ukf model!")
+        print("start ukf model!")
         while not rospy.is_shutdown():         
             ukf()
             estimate_state = ukf_module.get_state()
             estimate_state_list.data = list(estimate_state)
             state_pub.publish(estimate_state_list)
-
-	    acc_dyn_list.data = list(acc_dyn)
+            
+            acc_dyn_list.data = list(acc_dyn)
             acc_dyn_pub.publish(acc_dyn_list)
 
             debug_list.data = list(debug)
