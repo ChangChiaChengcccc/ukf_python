@@ -135,6 +135,25 @@ class UKF:
                  self.x[i]= 5
             if self.x[i]<-5:
                  self.x[i]= -5
+        # angular vel
+        for i in [9,10,11]:
+            if self.x[i]>1:
+                 self.x[i]= 1
+            if self.x[i]<-1:
+                 self.x[i]= -1
+        # E
+        for i in [15,16,17,18]:
+            if self.x[i]>1.2:
+                 self.x[i]= 1.2
+            if self.x[i]<0:
+                 self.x[i]= 0
+            if i == 16:
+               self.x[i]= self.x[i] / 0.7 *0.95
+            if i == 18:
+               self.x[i]= self.x[i] / 0.7 *0.95 
+        
+                 
+                 
         self.lock.release()
         
 
