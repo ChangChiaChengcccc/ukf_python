@@ -6,8 +6,8 @@ import numpy as np
 from numpy.linalg import inv
 import math 
 from gazebo_msgs.msg import ModelStates
-from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float64MultiArray
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import WrenchStamped
@@ -16,6 +16,8 @@ from geometry_msgs.msg import Point
 # time variables
 time_last = 0
 dt = 0
+time_now = 0
+
 
 # pre-declare variables
 state_dim = 19
@@ -43,9 +45,10 @@ f4_cmd = 0
 acc_dyn = np.zeros(3)
 debug = np.zeros(3)
 
-estimate_state_list = Float64MultiArray()
-acc_dyn_list = Float64MultiArray()
-debug_list = Float64MultiArray()
+estimate_state_list = Float32MultiArray()
+acc_dyn_list = Float32MultiArray()
+time_now_list = Float64MultiArray()
+debug_list = Float32MultiArray()
 
 
 # Process Noise
@@ -61,17 +64,17 @@ q[6][6] = 0.001
 q[7][7] = 0.001
 q[8][8] = 0.001
 # W,dW
-q[9][9] = 0.01
-q[10][10] = 0.01
-q[11][11] = 0.01
-q[12][12] = 0.01
-q[13][13] = 0.01
-q[14][14] = 0.01
+q[9][9] = 0.001
+q[10][10] = 0.001
+q[11][11] = 0.001
+q[12][12] = 0.001
+q[13][13] = 0.001
+q[14][14] = 0.001
 # E
-q[15][15] = 0.001
-q[16][16] = 0.001
-q[17][17] = 0.001
-q[18][18] = 0.001
+q[15][15] = 0.00001
+q[16][16] = 0.00001
+q[17][17] = 0.00001
+q[18][18] = 0.00001
 
 
 # create measurement noise covariance matrices
@@ -79,9 +82,9 @@ p_yy_noise = np.eye(measurement_dim)
 p_yy_noise[0][0] = 0.001
 p_yy_noise[1][1] = 0.001
 p_yy_noise[2][2] = 0.001
-p_yy_noise[3][3] = 0.0001
-p_yy_noise[4][4] = 0.0001
-p_yy_noise[5][5] = 0.0001
+p_yy_noise[3][3] = 0.001
+p_yy_noise[4][4] = 0.001
+p_yy_noise[5][5] = 0.001
 
 # create initial state
 initial_state = np.zeros(state_dim)
@@ -201,8 +204,9 @@ def RotMat_ned_cb(data):
     RotMat_enu = np.dot(RotFrame,np.dot(RotMat_ned,RotFrame))
 
 def ukf():
-    global time_last
+    global time_last, time_now
     global dt
+    time_now = rospy.get_time()
     dt = rospy.Time.now().to_sec() - time_last
     ukf_module.predict(dt)
     ukf_module.update(measurement_dim, sensor_data, p_yy_noise)
@@ -217,9 +221,10 @@ def ukf():
 if __name__ == "__main__":
     try:
         rospy.init_node('UKF')
-        state_pub = rospy.Publisher("/offline_ukf_estimated_state", Float64MultiArray, queue_size=10)
-        acc_dyn_pub = rospy.Publisher("/offline_ukf_acc_dyn", Float64MultiArray, queue_size=10)
-        debug_pub = rospy.Publisher("/offline_ukf_debug", Float64MultiArray, queue_size=10)
+        state_pub = rospy.Publisher("/ukf_estimated_state", Float32MultiArray, queue_size=10)
+        acc_dyn_pub = rospy.Publisher("/ukf_acc_dyn", Float32MultiArray, queue_size=10)
+        time_now_pub = rospy.Publisher("/time_now", Float64MultiArray, queue_size=10)
+        debug_pub = rospy.Publisher("/ukf_debug", Float32MultiArray, queue_size=10)
         rospy.Subscriber("/pos_enu", Point, pos_enu_cb, queue_size=10)
         rospy.Subscriber("/angular_vel", Point, gyro_cb, queue_size=10)
         rospy.Subscriber("/f1_cmd", Float32MultiArray, f1_cmd_cb, queue_size=10)
@@ -242,7 +247,10 @@ if __name__ == "__main__":
             
             acc_dyn_list.data = list(acc_dyn)
             acc_dyn_pub.publish(acc_dyn_list)
-
+            
+            time_now_list.data = [time_now]
+            time_now_pub.publish(time_now_list)
+            
             debug_list.data = list(debug)
             debug_pub.publish(debug_list)
 

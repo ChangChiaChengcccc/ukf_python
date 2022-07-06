@@ -143,15 +143,21 @@ class UKF:
                  self.x[i]= -1
         # E
         for i in [15,16,17,18]:
+            
+            # 1 & 3
+            if i == 15 or 17 :
+               self.x[i]= self.x[i] 
+            # 2   
+            if i == 16:
+               self.x[i]= self.x[i] / 0.7 *0.93 
+            #4
+            if i == 18:
+               self.x[i]= self.x[i] / 0.7 *0.93
+            
             if self.x[i]>1.2:
                  self.x[i]= 1.2
             if self.x[i]<0:
                  self.x[i]= 0
-            if i == 16:
-               self.x[i]= self.x[i] / 0.7 *0.95
-            if i == 18:
-               self.x[i]= self.x[i] / 0.7 *0.95 
-        
                  
                  
         self.lock.release()
