@@ -154,10 +154,10 @@ class UKF:
             if i == 18:
                self.x[i]= self.x[i] / 0.7 *0.93
             
-            if self.x[i]>1.2:
-                 self.x[i]= 1.2
-            if self.x[i]<0:
-                 self.x[i]= 0
+            if self.x[i]>1.0:
+                 self.x[i]= 1.0
+            if self.x[i]<0.6:
+                 self.x[i]= 0.6
                  
                  
         self.lock.release()
